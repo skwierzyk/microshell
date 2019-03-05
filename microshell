@@ -63,6 +63,12 @@ int read_parse_line(char * args[], char line[]){
 	
 	return 1;
 }
+
+void help(){
+printf("tu ma być pomoc");
+}
+
+
 int main(){
 	
 	char* args[MAX_WORD];
@@ -78,8 +84,8 @@ int main(){
 		
 		if (child_pid==0){
 			
-			
-			execvp(args[0],args);
+			if (strcmp(args[0], "help\n") == 0){  help();  }
+			else {execvp(args[0],args)};
 		}
 	}
 	}
