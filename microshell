@@ -1,93 +1,94 @@
 //skrypt wykonany z pomoca poradnika   https://www.youtube.com/watch?v=O5YVGg81Gdo oraz innych ogólnodostepnych w internecie
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/wait.h>
-#define MAX_WORD 10
-#define MAX_CHAR 100
-
-
-void remove_endOfLine(char line[]){
-
-
-	int i=0;
-	while(line[i] != '\n')
-	i++;
-
-	line[i] = '\0';
-}
-
-
-
-void read_line(char line[]){
-
-
-	char* ret = fgets(line,100,stdin);
-
-	remove_endOfLine(line);
 	
-	if(strcmp(line,"exit")==0 || ret== NULL)
-	exit(0);
-}
-
-
-
-int process_line(char* args[], char line[]){
-
-	int i=0;
-
-	args[i]=strtok(line, " ");
-	if(args[i]== NULL){
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <unistd.h>
+	#include <string.h>
+	#include <sys/wait.h>
+	#define MAX_WORD 10
+	#define MAX_CHAR 100
 	
+	
+	void remove_endOfLine(char line[]){
+	
+	
+		int i=0;
+		while(line[i] != '\n')
+		i++;
+	
+		line[i] = '\0';
+	}
+	
+	
+	
+	void read_line(char line[]){
+	
+	
+		char* ret = fgets(line,100,stdin);
+	
+		remove_endOfLine(line);
+		
+		if(strcmp(line,"exit")==0 || ret== NULL)
+		exit(0);
+	}
+	
+	
+	
+	int process_line(char* args[], char line[]){
+	
+		int i=0;
+	
+		args[i]=strtok(line, " ");
+		if(args[i]== NULL){
+		
+			return 1;
+		}
+		
+		while(args[i]!= NULL){
+		
+			i++;
+			args[i] = strtok(NULL," ");
+		}
+		
+	 return 1;
+	}
+	
+	
+	
+	int read_parse_line(char * args[], char line[]){
+		
+	
+		read_line(line);
+		process_line(args,line);
+		
 		return 1;
 	}
 	
-	while(args[i]!= NULL){
-	
-		i++;
-		args[i] = strtok(NULL," ");
+	void help(){
+	puts("Mateusz Skwierzynski - Shell \n available commands:\n help \n exit \n cd \n exit \n All built in linux");
 	}
 	
- return 1;
-}
-
-
-
-int read_parse_line(char * args[], char line[]){
 	
-
-	read_line(line);
-	process_line(args,line);
 	
-	return 1;
-}
-
-void help(){
-printf("tu ma być pomoc");
-}
-
-
-int main(){
-	
-	char* args[MAX_WORD];
-	char line[MAX_CHAR];
-	char home[200];
-	while(1){
-  		getcwd(home,200);
-  		printf("[%s] $ ",home);
-	
-	while(read_parse_line(args,line)){
+	int main(){
 		
-		pid_t child_pid=fork();
+		char* args[MAX_WORD];
+		char line[MAX_CHAR];
+		char home[200];
+		while(1){
+	  		getcwd(home,200);
+	  		printf("[%s] $ ",home);
 		
-		if (child_pid==0){
+		while(read_parse_line(args,line)){
 			
-			if (strcmp(args[0], "help\n") == 0){  help();  }
-			else {execvp(args[0],args)};
+			pid_t child_pid=fork();
+			
+			if (child_pid==0){
+				if (strcmp(args[0], "exit") == 0){  break;  }
+				if (strcmp(args[0], "help") == 0){  help();  }
+				else {execvp(args[0],args);}
+			}
 		}
+		}
+		return 0;
 	}
-	}
-	return 0;
-}
