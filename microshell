@@ -4,6 +4,8 @@
 	#include <stdlib.h>
 	#include <unistd.h>
 	#include <string.h>
+	#include <stdbool.h>
+	#include <limits.h>
 	#include <sys/wait.h>
 	#define MAX_WORD 10
 	#define MAX_CHAR 100
@@ -64,31 +66,89 @@
 		return 1;
 	}
 	
+void clear_screen()
+{
+    printf("\e[2J\e[H");
+}	
+	
+void display_prompt(bool clearscr){
+    char cwd[PATH_MAX];
+	char *user;
+    if (clearscr)
+        clear_screen();
+	user=getenv( "USER");
+    getcwd(cwd, sizeof(cwd));
+    printf("%s @ [%s] $ ",user,cwd);
+}
+	
 	void help(){
 	puts("Mateusz Skwierzynski - Shell \n available commands:\n help \n exit \n cd \n exit \n All built in linux");
 	}
 	
+	void cd(char **args){
+	char *temp;
+	temp=args[1];
+	chdir(temp);
+	}
+
+int launch_line(char **args){
+    pid_t pid, wpid;
+    int status;
+
+    pid = fork();
+    if (pid == 0) {
+        // Child process
+        if (execvp(args[0], args) == -1) {
+            perror("error");
+        }
+
+        exit(EXIT_FAILURE);
+    } else if (pid < 0) {
+        // Error forking
+        perror("error");
+    } else {
+        // Parent process
+        do {
+            wpid = waitpid(pid, &status, WUNTRACED);
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+    }
+
+    return 1;
+}	
 	
+int execute_line(char **args){
+    int i;
+
+    if (args[0] == NULL) {
+        // An empty command was entered.
+        return 1;
+    }
+
+    if (strcmp(args[0], "exit") == 0) {
+       return EXIT_SUCCESS;
+    } else if (strcmp(args[0], "help") == 0) {
+        help();
+    } else if (strcmp(args[0], "cd") == 0) {
+        cd(args);
+    } else {
+        return launch_line(args);
+    }
+
+    return 1;
+}
+
+
 	
 	int main(){
-		
+		int status;
 		char* args[MAX_WORD];
 		char line[MAX_CHAR];
-		char home[200];
-		while(1){
-	  		getcwd(home,200);
-	  		printf("[%s] $ ",home);
-		
-		while(read_parse_line(args,line)){
-			
-			pid_t child_pid=fork();
-			
-			if (child_pid==0){
-				if (strcmp(args[0], "exit") == 0){  break;  }
-				if (strcmp(args[0], "help") == 0){  help();  }
-				else {execvp(args[0],args);}
-			}
-		}
-		}
+		bool initialRun = true;
+		do{
+		display_prompt(initialRun);
+		if (initialRun) initialRun = false;
+		read_parse_line(args,line);
+		status=execute_line(args);
+		}while(status);
 		return 0;
 	}
